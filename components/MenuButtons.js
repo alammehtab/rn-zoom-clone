@@ -36,7 +36,7 @@ export default function MenuButtons({ navigation }) {
       {items.map((item, index) => (
         <View key={index} style={styles.buttonContainer}>
           <TouchableOpacity
-            onPress={() => openMeeting()}
+            onPress={item.name === "video-camera" ? () => openMeeting() : null}
             style={{
               ...styles.button,
               backgroundColor: item.customColor ? item.customColor : "#0470DC",

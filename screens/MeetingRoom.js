@@ -1,33 +1,130 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Alert,
+  SafeAreaView,
+  Text,
+  TouchableOpacity,
+  Modal,
+} from "react-native";
 import StartMeeting from "../components/StartMeeting";
 import { io } from "socket.io-client";
+import { Camera } from "expo-camera";
+import FontAwesome from "react-native-vector-icons/FontAwesome";
+
+const menuIcons = [
+  {
+    id: 1,
+    name: "microphone",
+    title: "Mute",
+    customColor: "#efefef",
+  },
+  {
+    id: 2,
+    name: "video-camera",
+    title: "Stop Video",
+  },
+  {
+    id: 3,
+    name: "upload",
+    title: "Share Content",
+  },
+  {
+    id: 4,
+    name: "group",
+    title: "Participants",
+  },
+];
 
 let socket;
 
 export default function MeetingRoom() {
   const [name, setName] = useState();
   const [roomId, setRoomId] = useState();
+  const [activeUsers, setActiveUsers] = useState([]);
+  const [startCamera, setStartCamera] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const _startCamera = async () => {
+    const { status } = await Camera.requestCameraPermissionsAsync();
+    if (status === "granted") {
+      setStartCamera(true);
+    } else {
+      Alert.alert("Access denied");
+    }
+  };
 
   const joinRoom = () => {
+    _startCamera();
     socket.emit("join-room", { roomId: roomId, userName: name });
   };
 
   useEffect(() => {
-    socket = io("http://7efb-111-88-200-23.ngrok.io");
-    console.log("hello");
+    socket = io("http://9dcc-111-88-218-148.ngrok.io");
     socket.on("connection", () => console.log("connected"));
+    socket.on("all-users", (users) => {
+      setActiveUsers(users);
+    });
   }, []);
 
   return (
+    // OUTER MOST CONTAINER
     <View style={styles.container}>
-      <StartMeeting
-        name={name}
-        setName={setName}
-        roomId={roomId}
-        setRoomId={setRoomId}
-        joinRoom={joinRoom}
-      />
+      {startCamera ? (
+        // INNER CONTAINER
+        <SafeAreaView style={{ flex: 1 }}>
+          <Modal
+            animationType="slide"
+            transparent={false}
+            presentationStyle="fullScreen"
+            visible={modalVisible}
+            onRequestClose={() => setModalVisible(!modalVisible)}
+          >
+            <Text>Hellooooooooooooooooooooooo</Text>
+          </Modal>
+
+          {/* ACTIVE USERS CONTAINER */}
+          <View style={styles.activeUsersContainer}>
+            {/* CAMERA CONTAINER  */}
+            <View style={styles.cameraContainer}>
+              <Camera
+                type={"front"}
+                style={{
+                  width: activeUsers.length <= 1 ? "100%" : 200,
+                  height: activeUsers.length <= 1 ? 600 : 200,
+                }}
+              ></Camera>
+
+              {/* CONTANER FOR A SINGLE ACTIVE USER */}
+              {activeUsers
+                .filter((user) => user.userName != name)
+                .map((user, index) => (
+                  <View style={styles.activeUserContainer} key={index}>
+                    <Text style={{ color: "white" }}>{user.userName}</Text>
+                  </View>
+                ))}
+            </View>
+          </View>
+          {/* FOOTER */}
+          <View style={styles.footerMenu}>
+            {menuIcons.map((icon, index) => (
+              <TouchableOpacity style={styles.tile} key={index}>
+                <FontAwesome name={icon.name} size={24} color={"#efefef"} />
+                <Text style={styles.textTile}>{icon.title}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </SafeAreaView>
+      ) : (
+        <StartMeeting
+          name={name}
+          setName={setName}
+          roomId={roomId}
+          setRoomId={setRoomId}
+          joinRoom={joinRoom}
+        />
+      )}
     </View>
   );
 }
@@ -36,5 +133,40 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: "#1c1c1c",
     flex: 1,
+  },
+  tile: {
+    justifyContent: "center",
+    alignItems: "center",
+    height: 50,
+    marginTop: 15,
+  },
+  textTile: {
+    color: "white",
+    marginTop: 10,
+  },
+  footerMenu: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+  },
+  cameraContainer: {
+    justifyContent: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+  },
+  activeUsersContainer: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "black",
+  },
+  activeUserContainer: {
+    borderColor: "gray",
+    borderWidth: 1,
+    width: 200,
+    height: 200,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
