@@ -81,7 +81,7 @@ export default function MeetingRoom() {
             visible={modalVisible}
             onRequestClose={() => setModalVisible(!modalVisible)}
           >
-            <Text>Hellooooooooooooooooooooooo</Text>
+            {/* <Text>Hellooooooooooooooooooooooo</Text> */}
           </Modal>
 
           {/* ACTIVE USERS CONTAINER */}
@@ -114,6 +114,10 @@ export default function MeetingRoom() {
                 <Text style={styles.textTile}>{icon.title}</Text>
               </TouchableOpacity>
             ))}
+          <TouchableOpacity style={styles.tile}>
+            <FontAwesome name="comment" size={24} color={"#efefef"} onPress={()=>setModalVisible(true)} />
+            <Text style={styles.textTile}>Chat</Text>
+          </TouchableOpacity>
           </View>
         </SafeAreaView>
       ) : (
